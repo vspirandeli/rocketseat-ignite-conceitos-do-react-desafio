@@ -10,20 +10,65 @@ interface Task {
   isComplete: boolean;
 }
 
+interface IdManipulation {
+  (): number;
+}
+
+
 export function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
 
+
+  const generateNewId: IdManipulation = () => {
+    const min = 0;
+    const max = 1000;
+
+    const generateNumber = min + Math.floor((max - min) * Math.random());
+
+    return generateNumber;
+  };
+
+  const getNewId: IdManipulation = () => {
+    const existentsIds = tasks.map(task => task.id);
+    let newId = generateNewId()
+
+    for(let i in existentsIds) {
+      if (newId === existentsIds[i]) {
+        newId = generateNewId();
+      };
+    };
+
+    return newId;
+  };
+
+
   function handleCreateNewTask() {
-    // Crie uma nova task com um id random, não permita criar caso o título seja vazio.
+    const newId = getNewId();
+
+    if (newTaskTitle.match(/\S/g)) {
+      setTasks([...tasks,
+        { id: newId, title: newTaskTitle, isComplete: false}]);
+      setNewTaskTitle('');
+    }
   }
 
   function handleToggleTaskCompletion(id: number) {
-    // Altere entre `true` ou `false` o campo `isComplete` de uma task com dado ID
+    const myTasks = [...tasks];
+
+    myTasks.forEach(task => {
+      if (task.id === id) {
+        task.isComplete ? task.isComplete = false : task.isComplete = true;
+      };
+    });
+
+    setTasks([...myTasks]);
   }
 
   function handleRemoveTask(id: number) {
-    // Remova uma task da listagem pelo ID
+    const myTasks = [...tasks].filter(task => task.id !== id);
+
+    setTasks([...myTasks]);
   }
 
   return (
@@ -32,9 +77,9 @@ export function TaskList() {
         <h2>Minhas tasks</h2>
 
         <div className="input-group">
-          <input 
-            type="text" 
-            placeholder="Adicionar novo todo" 
+          <input
+            type="text"
+            placeholder="Adicionar novo todo"
             onChange={(e) => setNewTaskTitle(e.target.value)}
             value={newTaskTitle}
           />
@@ -50,7 +95,7 @@ export function TaskList() {
             <li key={task.id}>
               <div className={task.isComplete ? 'completed' : ''} data-testid="task" >
                 <label className="checkbox-container">
-                  <input 
+                  <input
                     type="checkbox"
                     readOnly
                     checked={task.isComplete}
@@ -66,7 +111,7 @@ export function TaskList() {
               </button>
             </li>
           ))}
-          
+
         </ul>
       </main>
     </section>
